@@ -1,9 +1,16 @@
-import { Button } from "@/components/ui/button";
+import { redirect } from "next/navigation";
+import { auth } from "@/auth";
+import type { Role } from "@/types/next-auth";
 
-export default function Home() {
-  return (
-    <main className="flex min-h-screen items-center justify-center">
-      <Button>Phase 0 boot check</Button>
-    </main>
-  );
+const HOME_BY_ROLE: Record<Role, string> = {
+  admin: "/admin",
+  developer: "/dashboard",
+  broker: "/broker",
+};
+
+export default async function Home() {
+  const session = await auth();
+  const role = session?.user?.role;
+  if (!role) redirect("/login");
+  redirect(HOME_BY_ROLE[role] ?? "/login");
 }
