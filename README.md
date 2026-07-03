@@ -1,36 +1,85 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# parallex-showcase
 
-## Getting Started
+Production-grade proptech SaaS demo built to demonstrate fit for the Senior Full-Stack Engineer role at [Parallex](https://getparallex.com).
 
-First, run the development server:
+## Stack
+
+- **Next.js 15** App Router + Server Components + Server Actions
+- **TypeScript** strict mode with `noUncheckedIndexedAccess` (no `as any` / `@ts-ignore`)
+- **Tailwind v4** + **shadcn/ui** (Base UI primitives)
+- **Drizzle ORM** + Postgres on Neon (serverless, HTTP transport)
+- **Auth.js v5** with GitHub OAuth + RBAC (admin / developer / broker)
+- **Zod** validation, **TanStack Query/Table**, **Recharts**
+- **Vitest** unit + **Playwright** e2e + **GitHub Actions** CI
+
+## Architecture
+
+Modular monolith. Each domain (`project`, `asset`, `analytics`, `auth`, `workflow`) owns its schema + server actions + UI routes + tests under `src/modules/<name>/`. RBAC enforced at middleware (route redirects) AND inside every Server Action (defense in depth).
+
+### RBAC model
+
+| Role      | Capabilities                                                         |
+| --------- | -------------------------------------------------------------------- |
+| Admin     | Manage users, all projects, audit log, system settings               |
+| Developer | Own projects + assets + analytics, approve publishes, invite brokers |
+| Broker    | Browse projects, generate scoped share-links, see own engagement     |
+
+Roles are checked at three layers:
+
+1. **Middleware** (`src/middleware.ts`) — coarse route-level redirects
+2. **Layout guards** (`src/app/(protected)/*/layout.tsx`) — per-segment role check
+3. **Server Actions** — every action calls `assertCan(actor, action, resource)`
+
+## Local setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
+cp .env.example .env.local  # fill in real values
+pnpm db:push                # sync schema to Neon
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Required env vars
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Variable             | Purpose                                |
+| -------------------- | -------------------------------------- |
+| `DATABASE_URL`       | Neon Postgres connection string        |
+| `AUTH_SECRET`        | Run `openssl rand -hex 32`             |
+| `AUTH_GITHUB_ID`     | GitHub OAuth App Client ID             |
+| `AUTH_GITHUB_SECRET` | GitHub OAuth App Client Secret         |
+| `AUTH_TRUST_HOST`    | Set to `true` for Vercel/proxy deploys |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Scripts
 
-## Learn More
+| Command             | What it does                |
+| ------------------- | --------------------------- |
+| `pnpm dev`          | Local dev server            |
+| `pnpm build`        | Production build            |
+| `pnpm tsc --noEmit` | Typecheck (strict)          |
+| `pnpm test:unit`    | Vitest unit tests           |
+| `pnpm test:e2e`     | Playwright e2e tests        |
+| `pnpm db:push`      | Push schema changes to Neon |
 
-To learn more about Next.js, take a look at the following resources:
+## Phase status
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+This is **Phase 0 — Foundation**. Subsequent phases:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **Phase 1**: Developer Dashboard MVP (project CRUD, asset upload, units)
+- **Phase 2**: Public Hub + Broker (cinematic hub, share-links, engagement tracking)
+- **Phase 3**: Admin + RBAC + Workflow (user mgmt, approval flow, audit log UI)
+- **Phase 4**: Analytics + Real-time (engagement dashboard, intent scoring)
+- **Phase 5**: AI Features (vision tagging, NL search, description generation)
+- **Phase 6**: Polish + Ship (cinematic UI, full test coverage, Loom walkthrough)
 
-## Deploy on Vercel
+## JD mapping
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Every bullet in the Parallex Senior Full-Stack Engineer JD maps to this codebase:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| JD requirement                                                    | Where it's demonstrated                               |
+| ----------------------------------------------------------------- | ----------------------------------------------------- |
+| Own major features end-to-end                                     | Phase-by-phase delivery with plans + commits          |
+| Customer-facing flows + admin tools + dashboards                  | Public hub + admin console + developer dashboard      |
+| Frontend + backend + APIs + server actions + permissions-aware UI | Server Actions, RBAC middleware, role-guarded layouts |
+| Edge cases, empty/error/loading states                            | Phase 1+ (empty states), Phase 3 (error handling)     |
+| Testing discipline                                                | Vitest + Playwright + GitHub Actions CI               |
+| Clear technical plans                                             | `docs/superpowers/specs/` + `docs/superpowers/plans/` |
