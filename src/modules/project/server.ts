@@ -1,13 +1,19 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { projects, assets, units } from "@/lib/schema";
 import { getCurrentUser, assertCan } from "@/lib/authz";
 import { ok, err, type Result } from "@/lib/result";
 import { auditLog } from "@/lib/audit";
+import {
+  createProjectSchema,
+  updateProjectSchema,
+  createAssetSchema,
+  createUnitSchema,
+} from "./schemas";
+import type { z } from "zod";
 
 function slugify(text: string): string {
   return text
@@ -16,41 +22,6 @@ function slugify(text: string): string {
     .replace(/^-+|-+$/g, "")
     .slice(0, 80);
 }
-
-// --- Schemas ---
-
-export const createProjectSchema = z.object({
-  name: z.string().min(2).max(120),
-  description: z.string().max(2000).optional(),
-  location: z.string().max(200).optional(),
-  heroImageUrl: z.string().url().optional().or(z.literal("")),
-});
-
-export const updateProjectSchema = createProjectSchema.partial().extend({
-  status: z.enum(["draft", "published"]).optional(),
-});
-
-export const createAssetSchema = z.object({
-  projectId: z.string().uuid(),
-  type: z
-    .enum(["render", "film", "floorplan", "brochure", "gallery"])
-    .default("gallery"),
-  title: z.string().min(2).max(200),
-  url: z.string().url(),
-  thumbnailUrl: z.string().url().optional().or(z.literal("")),
-  description: z.string().max(1000).optional(),
-});
-
-export const createUnitSchema = z.object({
-  projectId: z.string().uuid(),
-  code: z.string().min(1).max(50),
-  name: z.string().max(200).optional(),
-  beds: z.coerce.number().int().min(0).optional(),
-  baths: z.coerce.number().int().min(0).optional(),
-  areaSqft: z.coerce.number().int().min(0).optional(),
-  price: z.coerce.number().int().min(0).optional(),
-  floorNumber: z.coerce.number().int().min(0).optional(),
-});
 
 // --- Queries (for server components) ---
 
