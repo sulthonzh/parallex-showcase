@@ -19,6 +19,7 @@ export default {
       const path = request.nextUrl.pathname;
       const isLoginPage = path.startsWith("/login");
       const isPublicRoute =
+        path === "/" ||
         path.startsWith("/projects/") ||
         path.startsWith("/s/") ||
         path.startsWith("/api/") ||
