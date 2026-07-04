@@ -8,7 +8,10 @@ import type { NextAuthConfig } from "next-auth";
  * The full config (with Drizzle adapter) lives in src/auth.ts.
  */
 export default {
-  providers: [GitHub, Google],
+  providers: [
+    GitHub({ allowDangerousEmailAccountLinking: true }),
+    Google({ allowDangerousEmailAccountLinking: true }),
+  ],
   pages: { signIn: "/login" },
   callbacks: {
     authorized: ({ auth, request }) => {
