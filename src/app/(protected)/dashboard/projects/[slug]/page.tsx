@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import { getProjectBySlug } from "@/modules/project/server";
 import { ProjectDetail } from "@/components/dashboard/project-detail";
 
+export const dynamic = "force-dynamic";
+
 export default async function ProjectDetailPage({
   params,
 }: {
