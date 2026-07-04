@@ -1,4 +1,5 @@
 import GitHub from "next-auth/providers/github";
+import Google from "next-auth/providers/google";
 import type { NextAuthConfig } from "next-auth";
 
 /**
@@ -7,7 +8,7 @@ import type { NextAuthConfig } from "next-auth";
  * The full config (with Drizzle adapter) lives in src/auth.ts.
  */
 export default {
-  providers: [GitHub],
+  providers: [GitHub, Google],
   pages: { signIn: "/login" },
   callbacks: {
     authorized: ({ auth, request }) => {
