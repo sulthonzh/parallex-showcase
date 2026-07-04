@@ -62,14 +62,15 @@ pnpm dev
 
 ## Phase status
 
-This is **Phase 0 — Foundation**. Subsequent phases:
+All 7 phases implemented and deployed:
 
-- **Phase 1**: Developer Dashboard MVP (project CRUD, asset upload, units)
-- **Phase 2**: Public Hub + Broker (cinematic hub, share-links, engagement tracking)
-- **Phase 3**: Admin + RBAC + Workflow (user mgmt, approval flow, audit log UI)
-- **Phase 4**: Analytics + Real-time (engagement dashboard, intent scoring)
-- **Phase 5**: AI Features (vision tagging, NL search, description generation)
-- **Phase 6**: Polish + Ship (cinematic UI, full test coverage, Loom walkthrough)
+- **Phase 0** ✅ Foundation — Next.js 15 + Drizzle + Auth.js v5 (GitHub + Google OAuth) + RBAC + Vercel deploy
+- **Phase 1** ✅ Developer Dashboard MVP — Project CRUD, asset management, unit management
+- **Phase 2** ✅ Public Hub + Broker — Cinematic dark hub page, broker workspace, share-links, engagement tracking
+- **Phase 3** ✅ Admin + RBAC — User management (role editing), audit log with every mutation captured
+- **Phase 4** ✅ Analytics — Engagement dashboard with Recharts (pie/bar), event tracking, intent scoring
+- **Phase 5** ✅ AI Infrastructure — Vision tagging + description generation (graceful degradation without API key)
+- **Phase 6** ✅ Polish + Seed — Demo data seeding, full RBAC enforcement, cinematic hub UI
 
 ## JD mapping
 
