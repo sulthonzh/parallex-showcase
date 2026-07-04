@@ -5,6 +5,7 @@ import {
   text,
   timestamp,
   jsonb,
+  pgEnum,
 } from "drizzle-orm/pg-core";
 import { pgTable } from "drizzle-orm/pg-core";
 import type { AdapterAccountType } from "next-auth/adapters";
@@ -83,6 +84,7 @@ export const auditLogs = pgTable("audit_log", {
 export const usersRelations = relations(users, ({ many }) => ({
   accounts: many(accounts),
   sessions: many(sessions),
+  projects: many(projects),
 }));
 
 export const accountsRelations = relations(accounts, ({ one }) => ({
@@ -91,4 +93,105 @@ export const accountsRelations = relations(accounts, ({ one }) => ({
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({
   user: one(users, { fields: [sessions.userId], references: [users.id] }),
+}));
+
+// --- Phase 1: Projects, Assets, Units ---
+
+export const projectStatus = pgEnum("project_status", ["draft", "published"]);
+
+export const projects = pgTable("project", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  developerId: text("developerId")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  slug: text("slug").notNull().unique(),
+  name: text("name").notNull(),
+  description: text("description"),
+  location: text("location"),
+  status: projectStatus("status").notNull().default("draft"),
+  heroImageUrl: text("heroImageUrl"),
+  createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt", { mode: "date" }).notNull().defaultNow(),
+});
+
+export const assetType = pgEnum("asset_type", [
+  "render",
+  "film",
+  "floorplan",
+  "brochure",
+  "gallery",
+]);
+export const assetStatus = pgEnum("asset_status", [
+  "draft",
+  "pending",
+  "approved",
+  "published",
+]);
+
+export const assets = pgTable("asset", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  projectId: text("projectId")
+    .notNull()
+    .references(() => projects.id, { onDelete: "cascade" }),
+  type: assetType("type").notNull().default("gallery"),
+  status: assetStatus("status").notNull().default("draft"),
+  title: text("title").notNull(),
+  url: text("url").notNull(),
+  thumbnailUrl: text("thumbnailUrl"),
+  description: text("description"),
+  sortOrder: integer("sortOrder").notNull().default(0),
+  createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt", { mode: "date" }).notNull().defaultNow(),
+});
+
+export const unitStatus = pgEnum("unit_status", [
+  "available",
+  "reserved",
+  "sold",
+]);
+
+export const units = pgTable("unit", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  projectId: text("projectId")
+    .notNull()
+    .references(() => projects.id, { onDelete: "cascade" }),
+  code: text("code").notNull(),
+  name: text("name"),
+  beds: integer("beds"),
+  baths: integer("baths"),
+  areaSqft: integer("areaSqft"),
+  price: integer("price"),
+  floorNumber: integer("floorNumber"),
+  status: unitStatus("status").notNull().default("available"),
+  createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt", { mode: "date" }).notNull().defaultNow(),
+});
+
+export const projectsRelations = relations(projects, ({ one, many }) => ({
+  developer: one(users, {
+    fields: [projects.developerId],
+    references: [users.id],
+  }),
+  assets: many(assets),
+  units: many(units),
+}));
+
+export const assetsRelations = relations(assets, ({ one }) => ({
+  project: one(projects, {
+    fields: [assets.projectId],
+    references: [projects.id],
+  }),
+}));
+
+export const unitsRelations = relations(units, ({ one }) => ({
+  project: one(projects, {
+    fields: [units.projectId],
+    references: [projects.id],
+  }),
 }));
