@@ -1,8 +1,5 @@
 import GitHub from "next-auth/providers/github";
-// Google provider is configured in .env.local but needs the redirect URI
-// registered in Google Cloud Console first. Uncomment when ready:
-// https://console.cloud.google.com/auth/clients → Add URI: <prod-domain>/api/auth/callback/google
-// import Google from "next-auth/providers/google";
+import Google from "next-auth/providers/google";
 import type { NextAuthConfig } from "next-auth";
 
 /**
@@ -11,7 +8,7 @@ import type { NextAuthConfig } from "next-auth";
  * The full config (with Drizzle adapter) lives in src/auth.ts.
  */
 export default {
-  providers: [GitHub],
+  providers: [GitHub, Google],
   pages: { signIn: "/login" },
   callbacks: {
     authorized: ({ auth, request }) => {
