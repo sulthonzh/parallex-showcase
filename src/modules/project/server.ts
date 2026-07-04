@@ -395,3 +395,187 @@ export async function updateUnitStatus(
   revalidatePath(`/dashboard/projects/${project.slug}`);
   return ok(undefined);
 }
+
+// --- Asset Approval Workflow ---
+
+export async function getPendingAssets() {
+  const user = await getCurrentUser();
+  if (!user || user.role !== "admin") return [];
+  return db
+    .select({
+      asset: assets,
+      projectName: projects.name,
+      projectSlug: projects.slug,
+    })
+    .from(assets)
+    .innerJoin(projects, eq(assets.projectId, projects.id))
+    .where(eq(assets.status, "pending"))
+    .orderBy(assets.updatedAt);
+}
+
+export async function requestApproval(
+  assetId: string,
+): Promise<Result<void, string>> {
+  const user = await getCurrentUser();
+  if (!user) return err("Not authenticated");
+  const [asset] = await db.select().from(assets).where(eq(assets.id, assetId));
+  if (!asset) return err("Asset not found");
+  const [project] = await db
+    .select()
+    .from(projects)
+    .where(eq(projects.id, asset.projectId));
+  if (!project) return err("Project not found");
+  assertCan(
+    user,
+    "asset:upload",
+    { actorId: user.id, ownerId: project.developerId },
+    { throwOnFail: true },
+  );
+  if (asset.status !== "draft")
+    return err("Only draft assets can request approval");
+  await db
+    .update(assets)
+    .set({ status: "pending", updatedAt: new Date() })
+    .where(eq(assets.id, assetId));
+  await auditLog({
+    actor: user,
+    action: "asset:request-approval",
+    entityType: "asset",
+    entityId: assetId,
+    before: { status: asset.status },
+    after: { status: "pending" },
+  });
+  revalidatePath(`/dashboard/projects/${project.slug}`);
+  revalidatePath("/admin/approvals");
+  return ok(undefined);
+}
+
+export async function approveAsset(
+  assetId: string,
+): Promise<Result<void, string>> {
+  const user = await getCurrentUser();
+  if (!user) return err("Not authenticated");
+  const [asset] = await db.select().from(assets).where(eq(assets.id, assetId));
+  if (!asset) return err("Asset not found");
+  if (asset.status !== "pending")
+    return err("Only pending assets can be approved");
+  await db
+    .update(assets)
+    .set({ status: "approved", updatedAt: new Date() })
+    .where(eq(assets.id, assetId));
+  await auditLog({
+    actor: user,
+    action: "asset:approve",
+    entityType: "asset",
+    entityId: assetId,
+    before: { status: asset.status },
+    after: { status: "approved" },
+  });
+  const [project] = await db
+    .select()
+    .from(projects)
+    .where(eq(projects.id, asset.projectId));
+  revalidatePath(`/dashboard/projects/${project?.slug ?? ""}`);
+  revalidatePath("/admin/approvals");
+  return ok(undefined);
+}
+
+export async function rejectAsset(
+  assetId: string,
+): Promise<Result<void, string>> {
+  const user = await getCurrentUser();
+  if (!user) return err("Not authenticated");
+  const [asset] = await db.select().from(assets).where(eq(assets.id, assetId));
+  if (!asset) return err("Asset not found");
+  if (asset.status !== "pending")
+    return err("Only pending assets can be rejected");
+  await db
+    .update(assets)
+    .set({ status: "draft", updatedAt: new Date() })
+    .where(eq(assets.id, assetId));
+  await auditLog({
+    actor: user,
+    action: "asset:reject",
+    entityType: "asset",
+    entityId: assetId,
+    before: { status: asset.status },
+    after: { status: "draft" },
+  });
+  const [project] = await db
+    .select()
+    .from(projects)
+    .where(eq(projects.id, asset.projectId));
+  revalidatePath(`/dashboard/projects/${project?.slug ?? ""}`);
+  revalidatePath("/admin/approvals");
+  return ok(undefined);
+}
+
+export async function publishAsset(
+  assetId: string,
+): Promise<Result<void, string>> {
+  const user = await getCurrentUser();
+  if (!user) return err("Not authenticated");
+  const [asset] = await db.select().from(assets).where(eq(assets.id, assetId));
+  if (!asset) return err("Asset not found");
+  if (asset.status !== "approved")
+    return err("Only approved assets can be published");
+  const [project] = await db
+    .select()
+    .from(projects)
+    .where(eq(projects.id, asset.projectId));
+  if (!project) return err("Project not found");
+  assertCan(
+    user,
+    "asset:publish",
+    { actorId: user.id, ownerId: project.developerId },
+    { throwOnFail: true },
+  );
+  await db
+    .update(assets)
+    .set({ status: "published", updatedAt: new Date() })
+    .where(eq(assets.id, assetId));
+  await auditLog({
+    actor: user,
+    action: "asset:publish",
+    entityType: "asset",
+    entityId: assetId,
+    before: { status: asset.status },
+    after: { status: "published" },
+  });
+  revalidatePath(`/dashboard/projects/${project.slug}`);
+  return ok(undefined);
+}
+
+export async function unpublishAsset(
+  assetId: string,
+): Promise<Result<void, string>> {
+  const user = await getCurrentUser();
+  if (!user) return err("Not authenticated");
+  const [asset] = await db.select().from(assets).where(eq(assets.id, assetId));
+  if (!asset) return err("Asset not found");
+  const [project] = await db
+    .select()
+    .from(projects)
+    .where(eq(projects.id, asset.projectId));
+  if (!project) return err("Project not found");
+  assertCan(
+    user,
+    "asset:publish",
+    { actorId: user.id, ownerId: project.developerId },
+    { throwOnFail: true },
+  );
+  await db
+    .update(assets)
+    .set({ status: "approved", updatedAt: new Date() })
+    .where(eq(assets.id, assetId));
+  await auditLog({
+    actor: user,
+    action: "asset:unpublish",
+    entityType: "asset",
+    entityId: assetId,
+    before: { status: asset.status },
+    after: { status: "approved" },
+  });
+  revalidatePath(`/dashboard/projects/${project.slug}`);
+  return ok(undefined);
+}

@@ -48,6 +48,12 @@ export default async function AdminLayout({
               Users
             </Link>
             <Link
+              href="/admin/approvals"
+              className="rounded-md px-3 py-2 text-sm font-medium hover:bg-muted"
+            >
+              Approvals
+            </Link>
+            <Link
               href="/admin/audit"
               className="rounded-md px-3 py-2 text-sm font-medium hover:bg-muted"
             >
