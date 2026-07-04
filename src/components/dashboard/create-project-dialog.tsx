@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Dialog,
@@ -32,10 +33,12 @@ export function CreateProjectDialog() {
     });
     setLoading(false);
     if (result.ok) {
+      toast.success("Project created!");
       setOpen(false);
       router.push(`/dashboard/projects/${result.value.slug}`);
       router.refresh();
     } else {
+      toast.error(result.error);
       setError(result.error);
     }
   }
