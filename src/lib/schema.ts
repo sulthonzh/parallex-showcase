@@ -195,3 +195,71 @@ export const unitsRelations = relations(units, ({ one }) => ({
     references: [projects.id],
   }),
 }));
+
+// --- Phase 2: Share Links + Engagement Events ---
+
+export const shareLinks = pgTable("share_link", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  projectId: text("projectId")
+    .notNull()
+    .references(() => projects.id, { onDelete: "cascade" }),
+  brokerId: text("brokerId")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  token: text("token")
+    .notNull()
+    .unique()
+    .$defaultFn(() => crypto.randomUUID().replace(/-/g, "").slice(0, 24)),
+  expiresAt: timestamp("expiresAt", { mode: "date" }),
+  maxUses: integer("maxUses"),
+  currentUses: integer("currentUses").notNull().default(0),
+  requiresPassword: text("requiresPassword"),
+  createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
+});
+
+export const engagementEvents = pgTable("engagement_event", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  projectId: text("projectId")
+    .notNull()
+    .references(() => projects.id, { onDelete: "cascade" }),
+  assetId: text("assetId").references(() => assets.id, {
+    onDelete: "set null",
+  }),
+  shareLinkId: text("shareLinkId").references(() => shareLinks.id, {
+    onDelete: "set null",
+  }),
+  sessionId: text("sessionId").notNull(),
+  eventType: text("eventType").notNull(),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("createdAt", { mode: "date" }).notNull().defaultNow(),
+});
+
+export const shareLinksRelations = relations(shareLinks, ({ one }) => ({
+  project: one(projects, {
+    fields: [shareLinks.projectId],
+    references: [projects.id],
+  }),
+  broker: one(users, { fields: [shareLinks.brokerId], references: [users.id] }),
+}));
+
+export const engagementEventsRelations = relations(
+  engagementEvents,
+  ({ one }) => ({
+    project: one(projects, {
+      fields: [engagementEvents.projectId],
+      references: [projects.id],
+    }),
+    asset: one(assets, {
+      fields: [engagementEvents.assetId],
+      references: [assets.id],
+    }),
+    shareLink: one(shareLinks, {
+      fields: [engagementEvents.shareLinkId],
+      references: [shareLinks.id],
+    }),
+  }),
+);
