@@ -1,3 +1,5 @@
+"use server";
+
 import { db } from "@/lib/db";
 import { engagementEvents } from "@/lib/schema";
 import { headers } from "next/headers";

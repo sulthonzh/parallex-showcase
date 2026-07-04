@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { projects, assets, units } from "@/lib/schema";
 import { trackEvent } from "@/modules/analytics/track";
+import { HubTracker } from "@/components/public/hub-tracker";
 import { formatPrice, formatNumber } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
@@ -38,6 +39,7 @@ export default async function PublicHubPage({
 
   return (
     <main className="min-h-screen bg-zinc-950 text-zinc-100">
+      <HubTracker projectId={project.id} />
       <header className="border-b border-zinc-800 px-6 py-4">
         <div className="mx-auto max-w-6xl flex items-center justify-between">
           <span className="text-sm font-medium tracking-wider uppercase text-zinc-400">
