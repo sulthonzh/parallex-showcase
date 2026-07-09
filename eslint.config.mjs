@@ -1,11 +1,11 @@
 import { defineConfig, globalIgnores } from "eslint/config";
 import js from "@eslint/js";
-import next from "eslint-plugin-next";
+import next from "@next/eslint-plugin-next";
 
 const eslintConfig = defineConfig([
   js.configs.recommended,
-  next.configs.recommended,
-  next.configs["core-web-vitals"],
+  ...next.configs.recommended,
+  ...next.configs["core-web-vitals"],
   {
     rules: {
       "react/no-unknown-property": "off",
