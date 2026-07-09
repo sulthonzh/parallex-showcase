@@ -1,13 +1,28 @@
 import { defineConfig, globalIgnores } from "eslint/config";
-import nextVitals from "eslint-config-next/core-web-vitals.js";
-import nextTs from "eslint-config-next/typescript.js";
+import js from "@eslint/js";
+import next from "eslint-plugin-next";
 
 const eslintConfig = defineConfig([
-  nextVitals,
-  nextTs,
-  // Override default ignores of eslint-config-next.
+  js.configs.recommended,
+  next.configs.recommended,
+  next.configs["core-web-vitals"],
+  {
+    rules: {
+      "react/no-unknown-property": "off",
+      "react/react-in-jsx-scope": "off",
+      "react/prop-types": "off",
+    },
+  },
+  // TypeScript config
+  {
+    files: ["**/*.ts", "**/*.tsx"],
+    rules: {
+      "@typescript-eslint/no-unused-vars": "warn",
+      "@typescript-eslint/no-unused-expressions": "warn",
+    },
+  },
+  // Override default ignores
   globalIgnores([
-    // Default ignores of eslint-config-next:
     ".next/**",
     "out/**",
     "build/**",
