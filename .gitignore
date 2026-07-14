@@ -52,3 +52,11 @@ next-env.d.ts
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+node_modules/
+dist/
+build/
+.next/
+__pycache__/
+.venv/
+*.egg-info/
+.mypy_cache/
