@@ -1,8 +1,8 @@
 import { test, expect } from "@playwright/test";
 
-test("home redirects to login when signed out", async ({ page }) => {
+test("home renders landing page for signed-out visitors", async ({ page }) => {
   await page.goto("/");
-  await expect(page).toHaveURL(/\/login/);
+  await expect(page.getByRole("link", { name: "Get Started" })).toBeVisible();
 });
 
 test("login page renders sign-in button", async ({ page }) => {
